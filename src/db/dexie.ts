@@ -142,7 +142,7 @@ export async function exportBackup(): Promise<BackupPayload> {
 
 export async function importBackup(payload: BackupPayload): Promise<void> {
   if (payload?.app !== 'tonifica12') {
-    throw new Error('Il file non sembra un backup di Tonifica 12.');
+    throw new Error('Il file non sembra un backup di Martina.');
   }
   await db.transaction(
     'rw',

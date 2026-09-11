@@ -9,12 +9,14 @@ import { vaiA } from '../lib/router';
 import {
   hoursUntil48h,
   isProgramComplete,
+  letterOfSession,
   nextSessionNumber,
   phaseOfSession,
   sessionsThisWeek,
   weekOfSession,
-  workoutForSession,
+  workoutOptionsForSession,
 } from '../lib/session-sequence';
+import type { Workout } from '../types';
 
 export default function Home() {
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], []);
@@ -25,13 +27,14 @@ export default function Home() {
   }
 
   const prossima = Math.min(nextSessionNumber(sessions), TOTAL_SESSIONS);
-  const workout = workoutForSession(prossima);
+  const [allenamentoA, allenamentoB] = workoutOptionsForSession(prossima);
+  const consigliata = letterOfSession(prossima);
   const fase = phases[phaseOfSession(prossima) - 1];
   const completate = sessions.filter((s) => s.status === 'completata').length;
   const oreMancanti = hoursUntil48h(sessions);
   const settimana = sessionsThisWeek(sessions);
 
-  const iniziaSessione = async (numero: number) => {
+  const iniziaSessione = async (numero: number, workout: Workout) => {
     const esistente = sessions.find((s) => s.status === 'in_corso');
     if (esistente?.id) {
       vaiA(`allenamento/${esistente.sessionNumber}`);
@@ -39,7 +42,7 @@ export default function Home() {
     }
     await db.sessions.add({
       sessionNumber: numero,
-      workoutId: workoutForSession(numero).id,
+      workoutId: workout.id,
       startedAt: new Date().toISOString(),
       status: 'in_corso',
     });
@@ -50,7 +53,7 @@ export default function Home() {
     if (!confirm(`Contrassegnare la sessione ${prossima} come saltata?`)) return;
     await db.sessions.add({
       sessionNumber: prossima,
-      workoutId: workout.id,
+      workoutId: allenamentoA.id,
       startedAt: new Date().toISOString(),
       finishedAt: new Date().toISOString(),
       status: 'saltata',
@@ -62,7 +65,7 @@ export default function Home() {
       <header className="flex items-center gap-3 pb-1">
         <Logo size={44} />
         <div className="flex-1">
-          <p className="font-display text-2xl font-extrabold leading-none">Tonifica 12</p>
+          <p className="font-display text-2xl font-extrabold leading-none">Martina</p>
           <p className="soft text-sm">Ciao! Pronta ad allenarti?</p>
         </div>
       </header>
@@ -122,34 +125,14 @@ export default function Home() {
         </button>
       </Card>
 
-      <Card forte>
-        <Etichetta>Prossimo allenamento</Etichetta>
-        <p className="font-display mt-1 text-2xl font-extrabold leading-tight">{workout.title}</p>
-        <div className="soft mt-2 flex flex-wrap items-center gap-2 text-sm">
-          <Chip>
-            <Clock size={13} /> ~{workout.estimatedMin} min
-          </Chip>
-          <Chip>{workout.strength.length} esercizi di forza</Chip>
-          <Chip>Core {workout.core.rounds} giri</Chip>
-          <Chip>
-            Cardio {workout.cardio.totalMin}&#8242;{' '}
-            {workout.cardio.type === 'liss' ? 'zona 2' : 'a intervalli'}
-          </Chip>
+      <div>
+        <div className="mb-2 flex items-center justify-between px-1">
+          <Etichetta>Scegli l&apos;allenamento di oggi</Etichetta>
+          <span className="soft text-xs font-semibold">Sessione {prossima} di {TOTAL_SESSIONS}</span>
         </div>
 
-        <ul className="soft mt-3 space-y-1 text-sm">
-          {workout.strength.map((s, i) => (
-            <li key={`${s.exerciseId}-${i}`} className="flex justify-between gap-3">
-              <span className="truncate">{exerciseName(s.exerciseId)}</span>
-              <span className="cifre shrink-0 font-semibold">
-                {s.sets}×{s.reps ?? `${s.durationSec}"`}
-              </span>
-            </li>
-          ))}
-        </ul>
-
         {oreMancanti > 0 ? (
-          <div className="mt-4 flex items-start gap-2 rounded-2xl bg-black/[0.06] p-3 text-sm dark:bg-white/10">
+          <div className="vetro mb-3 flex items-start gap-2 p-3 text-sm">
             <CalendarClock size={18} className="mt-0.5 shrink-0" />
             <p>
               Dall'ultimo allenamento non sono ancora passate 48 ore (mancano {oreMancanti} h).
@@ -158,21 +141,25 @@ export default function Home() {
           </div>
         ) : null}
 
+        <div className="space-y-3">
+          {[allenamentoA, allenamentoB].map((w) => (
+            <CartaAllenamento
+              key={w.id}
+              workout={w}
+              consigliata={w.id.endsWith(consigliata)}
+              onInizia={() => void iniziaSessione(prossima, w)}
+            />
+          ))}
+        </div>
+
         <button
           type="button"
-          className="btn-primario mt-4 w-full text-lg"
-          onClick={() => void iniziaSessione(prossima)}
-        >
-          <Play size={20} /> Inizia allenamento
-        </button>
-        <button
-          type="button"
-          className="soft mt-2 flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold"
+          className="soft mt-3 flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold"
           onClick={() => void saltaSessione()}
         >
-          <SkipForward size={15} /> Segna come saltata
+          <SkipForward size={15} /> Segna la sessione come saltata
         </button>
-      </Card>
+      </div>
 
       <Card>
         <Etichetta>Questa settimana</Etichetta>
@@ -200,5 +187,51 @@ export default function Home() {
         Storico delle sessioni <ChevronRight size={18} />
       </button>
     </div>
+  );
+}
+
+/** Scheda selezionabile per un allenamento (A o B) tra cui l'utente sceglie. */
+function CartaAllenamento({
+  workout,
+  consigliata,
+  onInizia,
+}: {
+  workout: Workout;
+  consigliata: boolean;
+  onInizia: () => void;
+}) {
+  return (
+    <Card forte>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-display text-xl font-extrabold leading-tight">{workout.title}</p>
+        {consigliata ? <Chip tono="scuro">Consigliata</Chip> : null}
+      </div>
+      <div className="soft mt-2 flex flex-wrap items-center gap-2 text-sm">
+        <Chip>
+          <Clock size={13} /> ~{workout.estimatedMin} min
+        </Chip>
+        <Chip>{workout.strength.length} esercizi di forza</Chip>
+        <Chip>Core {workout.core.rounds} giri</Chip>
+        <Chip>
+          Cardio {workout.cardio.totalMin}&#8242;{' '}
+          {workout.cardio.type === 'liss' ? 'zona 2' : 'a intervalli'}
+        </Chip>
+      </div>
+
+      <ul className="soft mt-3 space-y-1 text-sm">
+        {workout.strength.map((s, i) => (
+          <li key={`${s.exerciseId}-${i}`} className="flex justify-between gap-3">
+            <span className="truncate">{exerciseName(s.exerciseId)}</span>
+            <span className="cifre shrink-0 font-semibold">
+              {s.sets}×{s.reps ?? `${s.durationSec}"`}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <button type="button" className="btn-primario mt-4 w-full text-lg" onClick={onInizia}>
+        <Play size={20} /> Inizia allenamento {workout.id.slice(-1)}
+      </button>
+    </Card>
   );
 }

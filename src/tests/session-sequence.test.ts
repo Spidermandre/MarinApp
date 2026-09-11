@@ -7,7 +7,9 @@ import {
   setsForSession,
   weekOfSession,
   workoutForSession,
+  workoutForSessionWithId,
   workoutIdForSession,
+  workoutOptionsForSession,
 } from '../lib/session-sequence';
 import type { SessionLog } from '../types';
 
@@ -70,5 +72,31 @@ describe('sequenza delle sessioni', () => {
     const tre = new Date('2026-01-07T18:00:00Z').toISOString(); // 72 h fa
     expect(hoursUntil48h([log(1, 'completata', tre)], now)).toBe(0);
     expect(hoursUntil48h([], now)).toBe(0);
+  });
+});
+
+describe('scelta libera tra allenamento A e B', () => {
+  it('propone entrambi gli allenamenti della fase corrente, in ogni ordine', () => {
+    const [a, b] = workoutOptionsForSession(3);
+    expect(a.id).toBe('F1-A');
+    expect(b.id).toBe('F1-B');
+    const [a2, b2] = workoutOptionsForSession(10);
+    expect(a2.id).toBe('F2-A');
+    expect(b2.id).toBe('F2-B');
+  });
+
+  it('la settimana 1 resta a 2 serie qualunque allenamento si scelga', () => {
+    const a = workoutForSessionWithId(1, 'F1-A');
+    const b = workoutForSessionWithId(2, 'F1-B');
+    expect(a.strength.every((s) => s.sets === 2)).toBe(true);
+    expect(b.strength.every((s) => s.sets === 2)).toBe(true);
+    // anche scegliendo due volte lo stesso allenamento nella settimana 1
+    const aBis = workoutForSessionWithId(2, 'F1-A');
+    expect(aBis.strength.every((s) => s.sets === 2)).toBe(true);
+  });
+
+  it('workoutForSession resta la scelta automatica di default', () => {
+    expect(workoutForSession(9).id).toBe('F2-A');
+    expect(workoutForSessionWithId(9, 'F2-B').id).toBe('F2-B');
   });
 });

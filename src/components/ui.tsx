@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Info, Minus, Plus, X } from 'lucide-react';
 
 export function Card({
@@ -131,25 +132,40 @@ export function Foglio({
     };
   }, [onClose]);
 
-  return (
+  // Renderizzato con un portale direttamente su <body>: se restasse annidato
+  // dentro una card "vetro" (che usa backdrop-filter), quell'antenato
+  // diventerebbe il containing block del pannello "fixed" e lo ritaglierebbe
+  // dentro i propri confini invece di coprire tutto lo schermo.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <button
         type="button"
         aria-label="Chiudi"
         onClick={onClose}
-        className="absolute inset-0 bg-black/35 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/55 backdrop-blur-[3px]"
       />
-      <div className="vetro vetro-forte animate-glass-in relative z-10 max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-b-none p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-        <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-black/20 dark:bg-white/25" />
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <h2 className="font-display text-xl font-extrabold leading-tight">{titolo}</h2>
-          <button type="button" onClick={onClose} className="btn-piccolo bg-black/[0.07] dark:bg-white/10">
-            <X size={18} />
-          </button>
+      <div className="vetro vetro-forte animate-glass-in relative z-10 flex max-h-[88vh] w-full max-w-lg flex-col rounded-b-none">
+        {/* Intestazione fissa: resta visibile con la X anche scorrendo il contenuto. */}
+        <div className="shrink-0 rounded-t-[1.75rem] px-5 pt-3">
+          <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/20 dark:bg-white/25" />
+          <div className="flex items-start justify-between gap-3 border-b border-black/10 pb-3 dark:border-white/10">
+            <h2 className="font-display text-xl font-extrabold leading-tight">{titolo}</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Chiudi"
+              className="btn-piccolo shrink-0 bg-black/[0.07] dark:bg-white/10"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
-        {children}
+        <div className="overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+          {children}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

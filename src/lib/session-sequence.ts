@@ -34,10 +34,15 @@ export function setsForSession(item: PrescribedItem, sessionNumber: number): num
   return item.sets;
 }
 
-/** Allenamento della sessione, con le serie già adattate alla settimana 1. */
-export function workoutForSession(sessionNumber: number): Workout {
-  const base = workoutById(workoutIdForSession(sessionNumber));
-  if (!base) throw new Error(`Allenamento non trovato per la sessione ${sessionNumber}`);
+/**
+ * Allenamento esplicito (scelto dall'utente tra A e B) per una sessione, con
+ * le serie già adattate alla settimana 1. Il numero di sessione serve solo a
+ * calcolare fase e settimana: la lettera A/B è una scelta libera, non deriva
+ * dal numero.
+ */
+export function workoutForSessionWithId(sessionNumber: number, workoutId: string): Workout {
+  const base = workoutById(workoutId);
+  if (!base) throw new Error(`Allenamento non trovato: ${workoutId}`);
   return {
     ...base,
     strength: base.strength.map((item) => ({
@@ -45,6 +50,20 @@ export function workoutForSession(sessionNumber: number): Workout {
       sets: setsForSession(item, sessionNumber),
     })),
   };
+}
+
+/** Allenamento suggerito per la sessione (alternanza automatica A → B). */
+export function workoutForSession(sessionNumber: number): Workout {
+  return workoutForSessionWithId(sessionNumber, workoutIdForSession(sessionNumber));
+}
+
+/** I due allenamenti (A e B) della fase a cui appartiene la sessione, tra cui scegliere. */
+export function workoutOptionsForSession(sessionNumber: number): [Workout, Workout] {
+  const fase = phaseOfSession(sessionNumber);
+  return [
+    workoutForSessionWithId(sessionNumber, `F${fase}-A`),
+    workoutForSessionWithId(sessionNumber, `F${fase}-B`),
+  ];
 }
 
 /**

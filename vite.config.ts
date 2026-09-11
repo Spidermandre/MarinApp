@@ -14,8 +14,8 @@ export default defineConfig({
         navigateFallback: 'index.html',
       },
       manifest: {
-        name: 'Tonifica 12',
-        short_name: 'Tonifica 12',
+        name: 'Martina',
+        short_name: 'Martina',
         description: 'Programma di allenamento in palestra di 12 settimane, con registro dei carichi, timer e progressione automatica.',
         lang: 'it',
         start_url: './',

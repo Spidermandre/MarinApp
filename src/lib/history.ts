@@ -1,12 +1,20 @@
 import { db } from '../db/dexie';
-import { workoutForSession } from './session-sequence';
+import { workoutForSessionWithId } from './session-sequence';
 import type { ExerciseHistoryEntry } from './progression';
 import type { SessionLog, SetLog } from '../types';
 
-/** Range di ripetizioni prescritto per un esercizio in una data sessione. */
-export function prescribedRepsFor(sessionNumber: number, exerciseId: string): string | undefined {
+/**
+ * Range di ripetizioni prescritto per un esercizio in una data sessione già
+ * registrata: usa l'allenamento effettivamente scelto quel giorno (A o B),
+ * non quello che l'alternanza automatica avrebbe suggerito.
+ */
+export function prescribedRepsFor(
+  sessionNumber: number,
+  workoutId: string,
+  exerciseId: string,
+): string | undefined {
   try {
-    const w = workoutForSession(sessionNumber);
+    const w = workoutForSessionWithId(sessionNumber, workoutId);
     const item =
       w.strength.find((s) => s.exerciseId === exerciseId) ??
       w.core.items.find((s) => s.exerciseId === exerciseId);
@@ -34,7 +42,7 @@ export function buildHistory(
       if (righe.length === 0) return null;
       return {
         sessionNumber: s.sessionNumber,
-        prescribedReps: prescribedRepsFor(s.sessionNumber, exerciseId),
+        prescribedReps: prescribedRepsFor(s.sessionNumber, s.workoutId, exerciseId),
         sets: righe.map((r) => ({
           weightKg: r.weightKg,
           reps: r.reps,

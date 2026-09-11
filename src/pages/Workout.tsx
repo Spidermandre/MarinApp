@@ -20,9 +20,9 @@ import {
   suggestWeight,
 } from '../lib/progression';
 import { vaiA } from '../lib/router';
-import { workoutForSession } from '../lib/session-sequence';
+import { workoutForSessionWithId, workoutIdForSession } from '../lib/session-sequence';
 import { formatClock, useCountdown, useWakeLock } from '../lib/timers';
-import type { ActiveSessionState, PrescribedItem, SetLog } from '../types';
+import type { ActiveSessionState, PrescribedItem, SetLog, Workout as AllenamentoTipo } from '../types';
 
 const BLOCCHI = ['Riscaldamento', 'Forza', 'Core', 'Cardio', 'Defaticamento', 'Fine'] as const;
 const CHIAVE_TIMER = 'tonifica12.timer';
@@ -44,12 +44,21 @@ interface StatoAllenamento {
 }
 
 export default function Workout({ sessionNumber }: { sessionNumber: number }) {
-  const workout = useMemo(() => workoutForSession(sessionNumber), [sessionNumber]);
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], []);
   const setsSalvati = useLiveQuery(() => db.sets.toArray(), [], []);
   const impostazioni = useLiveQuery(() => db.settings.get(1), []);
   const sessione = sessions.find(
     (s) => s.sessionNumber === sessionNumber && s.status === 'in_corso',
+  );
+  // L'allenamento è quello scelto in home (A o B): non viene ricalcolato dal
+  // numero, così la scelta libera dell'utente resta quella effettivamente svolta.
+  const workout = useMemo(
+    () =>
+      workoutForSessionWithId(
+        sessionNumber,
+        sessione?.workoutId ?? workoutIdForSession(sessionNumber),
+      ),
+    [sessionNumber, sessione?.workoutId],
   );
   // toArray() distingue "ancora in caricamento" (undefined) da "nessuno stato salvato" ([]).
   const salvati = useLiveQuery(
@@ -530,7 +539,7 @@ function BloccoRiscaldamento({
   onToggle,
   onTimer,
 }: {
-  workout: ReturnType<typeof workoutForSession>;
+  workout: AllenamentoTipo;
   fatti: boolean[];
   onToggle: (i: number) => void;
   onTimer: (sec: number, label: string) => void;
@@ -717,7 +726,7 @@ function BloccoCardio({
   onFeel,
   onTimer,
 }: {
-  workout: ReturnType<typeof workoutForSession>;
+  workout: AllenamentoTipo;
   fatto: boolean;
   feel?: 'facile' | 'giusto' | 'difficile';
   onFatto: () => void;

@@ -26,7 +26,7 @@ export default function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `tonifica12-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `martina-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast.mostra('Backup esportato.');
@@ -220,7 +220,7 @@ export default function SettingsPage() {
       </Card>
 
       <p className="soft pb-2 text-center text-xs">
-        Tonifica 12 · funziona offline · i dati restano su questo dispositivo
+        Martina · funziona offline · i dati restano su questo dispositivo
       </p>
       {toast.nodo}
     </div>

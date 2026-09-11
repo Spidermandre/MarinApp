@@ -136,7 +136,7 @@ function AvvisoSicurezza({ onOk }: { onOk: () => void }) {
         <div className="mb-4 flex items-center gap-3">
           <Logo />
           <div>
-            <p className="font-display text-2xl font-extrabold leading-none">Tonifica 12</p>
+            <p className="font-display text-2xl font-extrabold leading-none">Martina</p>
             <p className="soft text-sm">12 settimane, 2 volte a settimana</p>
           </div>
         </div>

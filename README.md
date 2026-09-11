@@ -1,4 +1,4 @@
-# Tonifica 12
+# Martina
 
 App web mobile-first (PWA installabile) che guida un programma di allenamento in palestra
 di **12 settimane / 24 sessioni**, con registro dei carichi, timer e progressione automatica.
@@ -8,8 +8,9 @@ telefono. Tutto è salvato in locale nel browser (IndexedDB).
 
 ## Cosa c'è dentro
 
-- **Oggi** — fase corrente, sessione *n* di 24, barra di avanzamento, prossimo allenamento
-  con durata stimata, riepilogo della settimana e promemoria delle 48 ore di recupero.
+- **Oggi** — fase corrente, sessione *n* di 24, barra di avanzamento, entrambi gli allenamenti
+  della fase (A e B, con uno consigliato) tra cui scegliere liberamente, riepilogo della
+  settimana e promemoria delle 48 ore di recupero.
 - **Allenamento** — flusso guidato a blocchi: riscaldamento → forza → core → cardio →
   defaticamento → riepilogo.
   - ogni esercizio ha una breve spiegazione ("Come si esegue": passi, errori comuni,
