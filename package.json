@@ -1,0 +1,46 @@
+{
+  "name": "marinapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "vite",
+    "build": "tsc -b --noEmit false && vite build",
+    "preview": "vite preview",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Spidermandre/MarinApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Spidermandre/MarinApp/issues"
+  },
+  "homepage": "https://github.com/Spidermandre/MarinApp#readme",
+  "dependencies": {
+    "dexie": "^4.0.11",
+    "dexie-react-hooks": "^1.1.7",
+    "lucide-react": "^0.469.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "playwright": "^1.49.1",
+    "postcss": "^8.4.49",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^2.1.8"
+  }
+}
